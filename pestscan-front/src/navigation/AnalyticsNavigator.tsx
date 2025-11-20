@@ -1,0 +1,39 @@
+// src/navigation/AnalyticsNavigator.tsx
+
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AnalyticsDashboardScreen from '../screens/analytics/AnalyticsDashboardScreen';
+import HeatmapScreen from '../screens/analytics/HeatmapScreen';
+import ReportsScreen from '../screens/analytics/ReportsScreen';
+
+export type AnalyticsStackParamList = {
+  AnalyticsDashboard: { farmId?: string };
+  Heatmap: { farmId: string; week?: number; year?: number };
+  Reports: { farmId: string };
+};
+
+const Stack = createNativeStackNavigator<AnalyticsStackParamList>();
+
+const AnalyticsNavigator: React.FC = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="AnalyticsDashboard"
+        component={AnalyticsDashboardScreen}
+        options={{ title: 'Analytics' }}
+      />
+      <Stack.Screen
+        name="Heatmap"
+        component={HeatmapScreen}
+        options={{ title: 'Heat Map' }}
+      />
+      <Stack.Screen
+        name="Reports"
+        component={ReportsScreen}
+        options={{ title: 'Reports' }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+export default AnalyticsNavigator;
