@@ -1,6 +1,7 @@
 // src/utils/toastConfig.tsx
 
 import React from 'react';
+import Toast from 'react-native-toast-message';
 import { BaseToast, ErrorToast, InfoToast } from 'react-native-toast-message';
 import { colors } from '../theme/theme';
 
@@ -118,5 +119,3 @@ export const showWarningToast = (title: string, message?: string) => {
     text2: message,
   });
 };
-
-import Toast from 'react-native-toast-message';

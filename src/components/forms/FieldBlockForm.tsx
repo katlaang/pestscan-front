@@ -31,12 +31,11 @@ export const FieldBlockForm: React.FC<FieldBlockFormProps> = ({
 
   const [bayTags, setBayTags] = useState<string[]>(initialData?.bayTags || []);
   const [newBayTag, setNewBayTag] = useState('');
-
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const updateField = (field: string, value: string | boolean) => {
+  const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (typeof value === 'string' && errors[field]) {
+    if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
@@ -147,4 +146,111 @@ export const FieldBlockForm: React.FC<FieldBlockFormProps> = ({
             value={newBayTag}
             onChangeText={setNewBayTag}
             placeholder="Enter bay tag"
-            containerStyle={styles.tagInp
+            containerStyle={styles.tagInput}
+            leftIcon="pricetag"
+          />
+          <TouchableOpacity style={styles.addTagButton} onPress={addBayTag} activeOpacity={0.8}>
+            <Ionicons name="add" size={20} color={colors.surface} />
+          </TouchableOpacity>
+        </View>
+
+        {bayTags.length > 0 && (
+          <View style={styles.tagsContainer}>
+            {bayTags.map(tag => (
+              <TouchableOpacity key={tag} onPress={() => removeBayTag(tag)} activeOpacity={0.7}>
+                <Badge label={tag} icon="close" variant="neutral" style={styles.tagBadge} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
+      <View style={styles.buttonRow}>
+        <Button title="Cancel" onPress={onCancel} variant="outline" fullWidth style={styles.button} />
+        <Button
+          title={loading ? 'Saving...' : 'Save Field Block'}
+          onPress={handleSubmit}
+          loading={loading}
+          fullWidth
+          style={styles.button}
+          icon="save"
+        />
+      </View>
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  section: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  sectionTitle: {
+    ...typography.bodyBold,
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  summary: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+  },
+  summaryTitle: {
+    ...typography.bodyBold,
+    marginBottom: spacing.sm,
+    color: colors.text,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  summaryLabel: {
+    color: colors.textSecondary,
+  },
+  summaryValue: {
+    ...typography.bodyBold,
+    color: colors.text,
+  },
+  tagInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  tagInput: {
+    flex: 1,
+  },
+  addTagButton: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  tagBadge: {
+    marginRight: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  button: {
+    flex: 1,
+    borderRadius: borderRadius.md,
+  },
+});

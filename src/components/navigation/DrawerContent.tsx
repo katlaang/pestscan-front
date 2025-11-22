@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import {
   DrawerContentScrollView,
@@ -16,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '../common/Avatar';
 import { Divider } from '../layout/Divider';
-import { colors, spacing, typography, borderRadius } from '../../theme/theme';
+import { colors, spacing, typography, borderRadius, shadows } from '../../theme/theme';
 import { Role } from '../../types/api.types';
 
 interface DrawerMenuItem {
@@ -108,9 +107,7 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
 
-  const isRouteActive = (routeName: string): boolean => {
-    return state.routeNames[state.index] === routeName;
-  };
+  const isRouteActive = (routeName: string): boolean => state.routeNames[state.index] === routeName;
 
   const canAccessRoute = (item: DrawerMenuItem): boolean => {
     if (!item.roles || !user) return true;
@@ -136,12 +133,40 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
     }
   };
 
+  const renderMenuItem = (item: DrawerMenuItem) => {
+    if (!canAccessRoute(item)) return null;
+
+    const isActive = isRouteActive(item.route);
+    return (
+      <TouchableOpacity
+        key={item.route}
+        style={[styles.menuItem, isActive && styles.menuItemActive]}
+        onPress={() => handleNavigation(item.route)}
+        activeOpacity={0.8}
+      >
+        <View style={[styles.iconContainer, isActive && styles.iconContainerActive]}>
+          <Ionicons
+            name={item.icon}
+            size={20}
+            color={isActive ? colors.surface : colors.textSecondary}
+          />
+        </View>
+        <Text style={[styles.menuLabel, isActive && styles.menuLabelActive]}>{item.label}</Text>
+        {item.badge !== undefined && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{item.badge}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <DrawerContentScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
     >
-      {/* User Profile Section */}
+      {/* User Profile */}
       {user && (
         <View style={[styles.userSection, { paddingTop: insets.top }]}>
           <Avatar
@@ -166,78 +191,20 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
 
       <Divider marginVertical="md" />
 
-      {/* Main Menu */}
-      <View style={styles.menuSection}>
-        {drawerMenuItems.filter(canAccessRoute).map((item, index) => {
-          const isActive = isRouteActive(item.route);
-          return (
-            <TouchableOpacity
-              key={index}
-              style={[styles.menuItem, isActive && styles.menuItemActive]}
-              onPress={() => handleNavigation(item.route)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.menuItemLeft}>
-                <Ionicons
-                  name={item.icon}
-                  size={24}
-                  color={isActive ? colors.primary : colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.menuItemText,
-                    isActive && styles.menuItemTextActive,
-                  ]}
-                >
-                  {item.label}
-                </Text>
-              </View>
-              {item.badge !== undefined && item.badge > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
+      {/* Main navigation */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionHeaderText}>Navigation</Text>
       </View>
+      <View>{drawerMenuItems.map(renderMenuItem)}</View>
 
       <Divider marginVertical="md" />
 
-      {/* Settings Menu */}
-      <View style={styles.menuSection}>
-        {settingsMenuItems.map((item, index) => {
-          const isActive = isRouteActive(item.route);
-          return (
-            <TouchableOpacity
-              key={index}
-              style={[styles.menuItem, isActive && styles.menuItemActive]}
-              onPress={() => handleNavigation(item.route)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.menuItemLeft}>
-                <Ionicons
-                  name={item.icon}
-                  size={24}
-                  color={isActive ? colors.primary : colors.textSecondary}
-                />
-                <Text
-                  style={[
-                    styles.menuItemText,
-                    isActive && styles.menuItemTextActive,
-                  ]}
-                >
-                  {item.label}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionHeaderText}>Settings</Text>
       </View>
+      <View>{settingsMenuItems.map(renderMenuItem)}</View>
 
-      {/* Logout Button */}
+      {/* Logout */}
       {onLogout && (
         <>
           <Divider marginVertical="md" />
@@ -252,8 +219,126 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
         </>
       )}
 
-      {/* App Version */}
       <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
         <Text style={styles.versionText}>PestScan v1.0.0</Text>
       </View>
-    </DrawerContentScrollVie
+    </DrawerContentScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  contentContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+  userSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    ...typography.bodyBold,
+    color: colors.text,
+    fontSize: 18,
+  },
+  userEmail: {
+    color: colors.textSecondary,
+    marginTop: spacing.xs / 2,
+  },
+  roleBadge: {
+    marginTop: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.primaryLighter || '#E6F0FF',
+    borderRadius: borderRadius.full,
+  },
+  roleText: {
+    color: colors.primary,
+    ...typography.caption,
+  },
+  sectionHeader: {
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  sectionHeaderText: {
+    ...typography.bodyBold,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.md,
+    gap: spacing.md,
+  },
+  menuItemActive: {
+    backgroundColor: colors.primaryLighter || '#E6F0FF',
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+    ...shadows.sm,
+  },
+  iconContainerActive: {
+    backgroundColor: colors.primary,
+  },
+  menuLabel: {
+    ...typography.body,
+    color: colors.text,
+    flex: 1,
+  },
+  menuLabelActive: {
+    color: colors.primary,
+    ...typography.bodyBold,
+  },
+  badge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+  },
+  badgeText: {
+    color: colors.surface,
+    ...typography.caption,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+  },
+  logoutText: {
+    ...typography.bodyBold,
+    color: colors.error,
+  },
+  footer: {
+    marginTop: spacing.lg,
+  },
+  versionText: {
+    color: colors.textSecondary,
+    ...typography.caption,
+  },
+});

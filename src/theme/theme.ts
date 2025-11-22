@@ -29,6 +29,7 @@ export const colors = {
   textSecondary: '#7f8c8d',
   border: '#dfe6e9',
   disabled: '#b2bec3',
+  primaryLighter: '#e8f6ef',
   
   // Category colors
   pest: '#e74c3c',
@@ -36,7 +37,7 @@ export const colors = {
   beneficial: '#2ecc71',
 };
 
-export const spacing = {
+export const spacing: Record<string, number> = {
   xs: 4,
   sm: 8,
   md: 16,
@@ -51,6 +52,7 @@ export const borderRadius = {
   lg: 12,
   xl: 16,
   round: 999,
+  full: 999,
 };
 
 export const typography = {
@@ -77,6 +79,11 @@ export const typography = {
   body: {
     fontSize: 16,
     fontWeight: 'normal' as const,
+    lineHeight: 24,
+  },
+  bodyBold: {
+    fontSize: 16,
+    fontWeight: '600' as const,
     lineHeight: 24,
   },
   bodySmall: {
