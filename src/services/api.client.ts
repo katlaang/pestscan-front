@@ -1,5 +1,3 @@
-// src/services/api.client.ts
-
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ErrorResponse } from '../types/api.types';

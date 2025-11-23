@@ -1,5 +1,3 @@
-// src/services/farm.service.ts
-
 import { axiosInstance } from './api.client';
 import {
   FarmResponse,

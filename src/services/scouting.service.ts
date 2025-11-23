@@ -1,5 +1,3 @@
-// src/services/scouting.service.ts
-
 import { axiosInstance } from './api.client';
 import {
   ScoutingSessionDetailDto,

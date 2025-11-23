@@ -1,0 +1,225 @@
+// src/screens/farm/GreenhouseListScreen.tsx
+
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Screen } from '../../components/layout/Screen';
+import { GreenhouseCard } from '../../components/cards/GreenhouseCard';
+import { FloatingActionButton } from '../../components/navigation/FloatingActionButton';
+import { Input } from '../../components/common/Input';
+import { colors, spacing, typography } from '../../theme/theme';
+import { GreenhouseDto } from '../../types/api.types';
+
+interface GreenhouseListScreenProps {
+  navigation: any;
+  route: {
+    params: {
+      farmId: string;
+    };
+  };
+}
+
+export const GreenhouseListScreen: React.FC<GreenhouseListScreenProps> = ({
+  navigation,
+  route,
+}) => {
+  const { farmId } = route.params;
+  const [greenhouses, setGreenhouses] = useState<GreenhouseDto[]>([]);
+  const [filteredGreenhouses, setFilteredGreenhouses] = useState<GreenhouseDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    loadGreenhouses();
+  }, [farmId]);
+
+  useEffect(() => {
+    filterGreenhouses();
+  }, [searchQuery, greenhouses]);
+
+  const loadGreenhouses = async () => {
+    try {
+      setLoading(true);
+      // TODO: Implement API call
+      // const data = await greenhouseService.getGreenhouses(farmId);
+      // setGreenhouses(data);
+      
+      // Mock data
+      setTimeout(() => {
+        const mockData: GreenhouseDto[] = [
+          {
+            id: '1',
+            version: 1,
+            farmId,
+            name: 'Greenhouse A',
+            description: 'Main tomato production greenhouse',
+            bayCount: 10,
+            benchesPerBay: 4,
+            spotChecksPerBench: 5,
+            bayTags: ['North', 'Premium'],
+            benchTags: ['Row-1', 'Row-2'],
+            active: true,
+          },
+          {
+            id: '2',
+            version: 1,
+            farmId,
+            name: 'Greenhouse B',
+            description: 'Pepper cultivation area',
+            bayCount: 8,
+            benchesPerBay: 4,
+            spotChecksPerBench: 5,
+            bayTags: ['South'],
+            benchTags: ['Standard'],
+            active: true,
+          },
+          {
+            id: '3',
+            version: 1,
+            farmId,
+            name: 'Greenhouse C',
+            description: 'Experimental crops',
+            bayCount: 6,
+            benchesPerBay: 3,
+            spotChecksPerBench: 4,
+            bayTags: ['East', 'Research'],
+            benchTags: ['Test'],
+            active: false,
+          },
+        ];
+        setGreenhouses(mockData);
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      setLoading(false);
+      console.error('Failed to load greenhouses:', error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadGreenhouses();
+    setRefreshing(false);
+  };
+
+  const filterGreenhouses = () => {
+    if (!searchQuery.trim()) {
+      setFilteredGreenhouses(greenhouses);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = greenhouses.filter(
+      (greenhouse) =>
+        greenhouse.name.toLowerCase().includes(query) ||
+        greenhouse.description?.toLowerCase().includes(query) ||
+        greenhouse.bayTags.some(tag => tag.toLowerCase().includes(query))
+    );
+    setFilteredGreenhouses(filtered);
+  };
+
+  const handleGreenhousePress = (greenhouse: GreenhouseDto) => {
+    navigation.navigate('GreenhouseDetail', { greenhouseId: greenhouse.id });
+  };
+
+  const handleCreateGreenhouse = () => {
+    navigation.navigate('CreateGreenhouse', { farmId });
+  };
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="business-outline" size={64} color={colors.textSecondary} />
+      <Text style={styles.emptyTitle}>No Greenhouses</Text>
+      <Text style={styles.emptyText}>
+        {searchQuery
+          ? 'No greenhouses match your search'
+          : 'Get started by creating your first greenhouse'}
+      </Text>
+    </View>
+  );
+
+  return (
+    <Screen
+      title="Greenhouses"
+      showBack
+      onBackPress={() => navigation.goBack()}
+      headerActions={[
+        {
+          icon: 'add',
+          onPress: handleCreateGreenhouse,
+          label: 'Add',
+        },
+      ]}
+    >
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <Input
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search greenhouses..."
+            leftIcon="search"
+            containerStyle={styles.searchInput}
+          />
+        </View>
+
+        <FlatList
+          data={filteredGreenhouses}
+          renderItem={({ item }) => (
+            <GreenhouseCard
+              greenhouse={item}
+              onPress={() => handleGreenhousePress(item)}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          ListEmptyComponent={!loading ? renderEmpty : null}
+          showsVerticalScrollIndicator={false}
+        />
+
+        <FloatingActionButton
+          icon="add"
+          onPress={handleCreateGreenhouse}
+        />
+      </View>
+    </Screen>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  searchContainer: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.background,
+  },
+  searchInput: {
+    marginBottom: 0,
+  },
+  listContent: {
+    padding: spacing.md,
+    paddingBottom: spacing.xl * 2,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+    marginTop: spacing.xl * 2,
+  },
+  emptyTitle: {
+    ...typography.h3,
+    color: colors.text,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  emptyText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+});

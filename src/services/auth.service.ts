@@ -1,5 +1,3 @@
-// src/services/auth.service.ts
-
 import { axiosInstance, apiClient } from './api.client';
 import {
   LoginRequest,
@@ -21,6 +19,10 @@ class AuthService {
   async register(data: RegisterRequest): Promise<UserDto> {
     const response = await axiosInstance.post<UserDto>('/auth/register', data);
     return response.data;
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    await axiosInstance.post('/auth/forgot-password', { email });
   }
 
   async getCurrentUser(): Promise<UserDto> {

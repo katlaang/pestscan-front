@@ -56,37 +56,47 @@ export const borderRadius = {
 export const typography = {
   h1: {
     fontSize: 32,
-    fontWeight: 'bold' as const,
+    fontWeight: '700' as const,
     lineHeight: 40,
   },
   h2: {
-    fontSize: 24,
-    fontWeight: 'bold' as const,
-    lineHeight: 32,
+    fontSize: 28,
+    fontWeight: '700' as const,
+    lineHeight: 36,
   },
   h3: {
+    fontSize: 24,
+    fontWeight: '600' as const,
+    lineHeight: 32,
+  },
+  h4: {
     fontSize: 20,
     fontWeight: '600' as const,
     lineHeight: 28,
   },
-  h4: {
+  h5: {
     fontSize: 18,
     fontWeight: '600' as const,
     lineHeight: 24,
   },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '500' as const,
+    lineHeight: 24,
+  },
   body: {
     fontSize: 16,
-    fontWeight: 'normal' as const,
+    fontWeight: '400' as const,
     lineHeight: 24,
   },
   bodySmall: {
     fontSize: 14,
-    fontWeight: 'normal' as const,
+    fontWeight: '400' as const,
     lineHeight: 20,
   },
   caption: {
     fontSize: 12,
-    fontWeight: 'normal' as const,
+    fontWeight: '400' as const,
     lineHeight: 16,
   },
   button: {
@@ -94,7 +104,7 @@ export const typography = {
     fontWeight: '600' as const,
     lineHeight: 24,
   },
-};
+} as const;
 
 export const shadows = {
   sm: {

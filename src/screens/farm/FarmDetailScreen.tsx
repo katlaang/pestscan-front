@@ -1,0 +1,360 @@
+// src/screens/farm/FarmDetailScreen.tsx
+
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Screen } from '../../components/layout/Screen';
+import { Card } from '../../components/common/Card';
+import { Button } from '../../components/common/Button';
+import { Badge } from '../../components/common/Badge';
+import { StatCard, StatCardGrid } from '../../components/cards/StatCard';
+import { Row } from '../../components/layout/Row';
+import { Divider } from '../../components/layout/Divider';
+import { colors, spacing, typography, borderRadius } from '../../theme/theme';
+import { FarmResponse, SubscriptionStatus } from '../../types/api.types';
+import { getStatusColor, getStatusLabel } from '../../utils/helpers';
+
+interface FarmDetailScreenProps {
+  navigation: any;
+  route: {
+    params: {
+      farmId: string;
+    };
+  };
+}
+
+export const FarmDetailScreen: React.FC<FarmDetailScreenProps> = ({ navigation, route }) => {
+  const { farmId } = route.params;
+  const [farm, setFarm] = useState<FarmResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadFarmData();
+  }, [farmId]);
+
+  const loadFarmData = async () => {
+    try {
+      setLoading(true);
+      // TODO: Implement API call
+      // const data = await farmService.getFarm(farmId);
+      // setFarm(data);
+      
+      // Mock data
+      setTimeout(() => {
+        setFarm({
+          id: farmId,
+          farmTag: 'GVF-001',
+          name: 'Green Valley Farm',
+          description: 'Premium organic greenhouse operation specializing in tomatoes and peppers',
+          address: '123 Farm Road',
+          city: 'Portland',
+          province: 'Oregon',
+          postalCode: '97201',
+          country: 'USA',
+          contactName: 'John Smith',
+          contactEmail: 'john@greenvalley.com',
+          contactPhone: '+1 503 555 0100',
+          subscriptionStatus: SubscriptionStatus.ACTIVE,
+          subscriptionTier: 'PREMIUM' as any,
+          billingEmail: 'billing@greenvalley.com',
+          licensedAreaHectares: 5.5,
+          licensedUnitQuota: 100,
+          quotaDiscountPercentage: 10,
+          structureType: 'GREENHOUSE' as any,
+          defaultBayCount: 10,
+          defaultBenchesPerBay: 4,
+          defaultSpotChecksPerBench: 5,
+          createdAt: '2024-01-15T10:00:00Z',
+          updatedAt: '2024-11-20T14:30:00Z',
+          timezone: 'America/Los_Angeles',
+          ownerId: 'user-1',
+          scoutId: 'user-2',
+        } as FarmResponse);
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Error', 'Failed to load farm data');
+    }
+  };
+
+  const handleEdit = () => {
+    navigation.navigate('EditFarm', { farmId });
+  };
+
+  const handleViewGreenhouses = () => {
+    navigation.navigate('GreenhouseList', { farmId });
+  };
+
+  const handleViewFieldBlocks = () => {
+    navigation.navigate('FieldBlockList', { farmId });
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Farm',
+      'Are you sure you want to delete this farm? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            // TODO: Implement delete
+            navigation.goBack();
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading || !farm) {
+    return (
+      <Screen
+        title="Farm Details"
+        showBack
+        onBackPress={() => navigation.goBack()}
+      >
+        <View style={styles.loadingContainer}>
+          <Text>Loading...</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen
+      title={farm.name}
+      subtitle={farm.farmTag}
+      showBack
+      onBackPress={() => navigation.goBack()}
+      scroll
+      padding="md"
+      headerActions={[
+        {
+          icon: 'create',
+          onPress: handleEdit,
+          label: 'Edit',
+        },
+        {
+          icon: 'trash',
+          onPress: handleDelete,
+          label: 'Delete',
+        },
+      ]}
+    >
+      {/* Status Card */}
+      <Card padding="md">
+        <Row justify="space-between" align="center">
+          <View>
+            <Text style={styles.label}>Subscription Status</Text>
+            <Text style={styles.value}>{farm.subscriptionTier}</Text>
+          </View>
+          <Badge
+            label={getStatusLabel(farm.subscriptionStatus)}
+            variant={farm.subscriptionStatus === SubscriptionStatus.ACTIVE ? 'success' : 'warning'}
+          />
+        </Row>
+      </Card>
+
+      {/* Stats */}
+      <StatCardGrid columns={2}>
+        <StatCard
+          title="Licensed Area"
+          value={`${farm.licensedAreaHectares} ha`}
+          icon="resize"
+          variant="info"
+        />
+        <StatCard
+          title="Structure Type"
+          value={farm.structureType}
+          icon="business"
+          variant="default"
+        />
+        <StatCard
+          title="Unit Quota"
+          value={farm.licensedUnitQuota || 0}
+          icon="albums"
+          variant="success"
+        />
+        <StatCard
+          title="Discount"
+          value={`${farm.quotaDiscountPercentage || 0}%`}
+          icon="pricetag"
+          variant="warning"
+        />
+      </StatCardGrid>
+
+      {/* Location Information */}
+      <Card padding="md">
+        <Text style={styles.sectionTitle}>Location</Text>
+        {farm.address && (
+          <View style={styles.infoRow}>
+            <Ionicons name="location" size={20} color={colors.textSecondary} />
+            <View style={styles.infoContent}>
+              <Text style={styles.infoText}>{farm.address}</Text>
+              <Text style={styles.infoText}>
+                {farm.city}, {farm.province} {farm.postalCode}
+              </Text>
+              <Text style={styles.infoText}>{farm.country}</Text>
+            </View>
+          </View>
+        )}
+        {farm.timezone && (
+          <View style={styles.infoRow}>
+            <Ionicons name="time" size={20} color={colors.textSecondary} />
+            <Text style={styles.infoText}>{farm.timezone}</Text>
+          </View>
+        )}
+      </Card>
+
+      {/* Contact Information */}
+      <Card padding="md">
+        <Text style={styles.sectionTitle}>Contact Information</Text>
+        {farm.contactName && (
+          <View style={styles.infoRow}>
+            <Ionicons name="person" size={20} color={colors.textSecondary} />
+            <Text style={styles.infoText}>{farm.contactName}</Text>
+          </View>
+        )}
+        {farm.contactEmail && (
+          <View style={styles.infoRow}>
+            <Ionicons name="mail" size={20} color={colors.textSecondary} />
+            <Text style={styles.infoText}>{farm.contactEmail}</Text>
+          </View>
+        )}
+        {farm.contactPhone && (
+          <View style={styles.infoRow}>
+            <Ionicons name="call" size={20} color={colors.textSecondary} />
+            <Text style={styles.infoText}>{farm.contactPhone}</Text>
+          </View>
+        )}
+        {farm.billingEmail && (
+          <View style={styles.infoRow}>
+            <Ionicons name="card" size={20} color={colors.textSecondary} />
+            <Text style={styles.infoText}>{farm.billingEmail}</Text>
+          </View>
+        )}
+      </Card>
+
+      {/* Default Configuration */}
+      <Card padding="md">
+        <Text style={styles.sectionTitle}>Default Configuration</Text>
+        <Row gap="md" style={styles.configRow}>
+          <View style={styles.configItem}>
+            <Text style={styles.configValue}>{farm.defaultBayCount || 0}</Text>
+            <Text style={styles.configLabel}>Bays</Text>
+          </View>
+          <View style={styles.configItem}>
+            <Text style={styles.configValue}>{farm.defaultBenchesPerBay || 0}</Text>
+            <Text style={styles.configLabel}>Benches/Bay</Text>
+          </View>
+          <View style={styles.configItem}>
+            <Text style={styles.configValue}>{farm.defaultSpotChecksPerBench || 0}</Text>
+            <Text style={styles.configLabel}>Spot Checks</Text>
+          </View>
+        </Row>
+      </Card>
+
+      {/* Description */}
+      {farm.description && (
+        <Card padding="md">
+          <Text style={styles.sectionTitle}>Description</Text>
+          <Text style={styles.descriptionText}>{farm.description}</Text>
+        </Card>
+      )}
+
+      {/* Quick Actions */}
+      <View style={styles.actionsContainer}>
+        <Button
+          title="View Greenhouses"
+          icon="business"
+          onPress={handleViewGreenhouses}
+          variant="outline"
+          fullWidth
+          style={styles.actionButton}
+        />
+        <Button
+          title="View Field Blocks"
+          icon="grid"
+          onPress={handleViewFieldBlocks}
+          variant="outline"
+          fullWidth
+          style={styles.actionButton}
+        />
+      </View>
+    </Screen>
+  );
+};
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  sectionTitle: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: '600',
+    marginBottom: spacing.md,
+  },
+  label: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  value: {
+    ...typography.h4,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoText: {
+    ...typography.body,
+    color: colors.text,
+    flex: 1,
+  },
+  configRow: {
+    justifyContent: 'space-around',
+  },
+  configItem: {
+    alignItems: 'center',
+    padding: spacing.sm,
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.md,
+    minWidth: 80,
+  },
+  configValue: {
+    ...typography.h3,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  configLabel: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  descriptionText: {
+    ...typography.body,
+    color: colors.text,
+    lineHeight: 24,
+  },
+  actionsContainer: {
+    marginTop: spacing.md,
+    gap: spacing.md,
+  },
+  actionButton: {
+    marginBottom: spacing.sm,
+  },
+});

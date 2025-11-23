@@ -1,5 +1,3 @@
-// src/services/analytics.service.ts
-
 import { axiosInstance } from './api.client';
 import {
   HeatmapResponse,

@@ -1,185 +1,161 @@
 // src/screens/auth/LoginScreen.tsx
 
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-} from 'react-native';
-import { TextInput, Button, HelperText } from 'react-native-paper';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { useAuth } from '../../store/AuthContext';
+import { View, Text, StyleSheet, Image, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Input } from '../../components/common/Input';
+import { Button } from '../../components/common/Button';
 import { colors, spacing, typography, borderRadius } from '../../theme/theme';
-import { showErrorToast } from '../../utils/toastConfig';
-import { getErrorMessage } from '../../utils/helpers';
+import { LoginRequest } from '../../types/api.types';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
+interface LoginScreenProps {
+  navigation: any;
+}
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-});
+export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-type LoginFormData = z.infer<typeof loginSchema>;
+  const validate = (): boolean => {
+    const newErrors: { email?: string; password?: string } = {};
 
-const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const { login } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Invalid email format';
+    }
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
 
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
-    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = async () => {
+    if (!validate()) return;
+
     try {
-      await login(data.email, data.password);
-      // Navigation will be handled automatically by AppNavigator
+      setLoading(true);
+      // TODO: Implement API call
+      // const loginData: LoginRequest = { email: email.toLowerCase(), password };
+      // const response = await authService.login(loginData);
+      // await AsyncStorage.setItem('token', response.token);
+      // navigation.replace('Main');
+      
+      // Mock login for now
+      setTimeout(() => {
+        setLoading(false);
+        console.log('Login successful');
+        // navigation.replace('Main');
+      }, 1500);
     } catch (error) {
-      showErrorToast('Login Failed', getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
+      setLoading(false);
+      setErrors({ password: 'Invalid email or password' });
+      console.error('Login failed:', error);
     }
   };
 
+  const handleForgotPassword = () => {
+    navigation.navigate('ForgotPassword');
+  };
+
+  const handleRegister = () => {
+    navigation.navigate('Register');
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <LinearGradient
-          colors={[colors.primary, colors.primaryDark]}
-          style={styles.header}
-        >
-          <View style={styles.logoContainer}>
-            <Ionicons name="leaf" size={60} color={colors.surface} />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <KeyboardAvoidingView style={styles.keyboardView} behavior="padding">
+        <View style={styles.content}>
+          {/* Logo Section */}
+          <View style={styles.logoSection}>
+            <View style={styles.logoPlaceholder}>
+              <Text style={styles.logoText}>🌱</Text>
+            </View>
+            <Text style={styles.appName}>PestScan</Text>
+            <Text style={styles.tagline}>Agricultural Pest Management</Text>
           </View>
-          <Text style={styles.title}>Mofo Pest Scout</Text>
-          <Text style={styles.subtitle}>Farm Pest Management System</Text>
-        </LinearGradient>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.formTitle}>Sign In</Text>
-          <Text style={styles.formSubtitle}>
-            Enter your credentials to access your account
-          </Text>
+          {/* Form Section */}
+          <View style={styles.formSection}>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>Sign in to continue</Text>
 
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  mode="outlined"
-                  label="Email"
-                  placeholder="your.email@example.com"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  autoComplete="email"
-                  left={<TextInput.Icon icon="email" />}
-                  error={!!errors.email}
-                  style={styles.input}
-                />
-                {errors.email && (
-                  <HelperText type="error" visible={!!errors.email}>
-                    {errors.email.message}
-                  </HelperText>
-                )}
-              </View>
-            )}
-          />
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errors.email) setErrors({ ...errors, email: undefined });
+              }}
+              placeholder="your.email@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              error={errors.email}
+              leftIcon="mail"
+            />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  mode="outlined"
-                  label="Password"
-                  placeholder="Enter your password"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoComplete="password"
-                  left={<TextInput.Icon icon="lock" />}
-                  right={
-                    <TextInput.Icon
-                      icon={showPassword ? 'eye-off' : 'eye'}
-                      onPress={() => setShowPassword(!showPassword)}
-                    />
-                  }
-                  error={!!errors.password}
-                  style={styles.input}
-                />
-                {errors.password && (
-                  <HelperText type="error" visible={!!errors.password}>
-                    {errors.password.message}
-                  </HelperText>
-                )}
-              </View>
-            )}
-          />
+            <Input
+              label="Password"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) setErrors({ ...errors, password: undefined });
+              }}
+              placeholder="Enter your password"
+              secureTextEntry
+              error={errors.password}
+              leftIcon="lock-closed"
+            />
 
-          <Button
-            mode="contained"
-            onPress={handleSubmit(onSubmit)}
-            loading={isLoading}
-            disabled={isLoading}
-            style={styles.loginButton}
-            contentStyle={styles.loginButtonContent}
-          >
-            Sign In
-          </Button>
+            <TouchableOpacity
+              onPress={handleForgotPassword}
+              style={styles.forgotPasswordButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.registerLink}
-            onPress={() => navigation.navigate('Register')}
-            disabled={isLoading}
-          >
-            <Text style={styles.registerText}>
-              Don't have an account?{' '}
-              <Text style={styles.registerTextBold}>Register</Text>
+            <Button
+              title="Sign In"
+              onPress={handleLogin}
+              loading={loading}
+              disabled={loading}
+              icon="log-in"
+              fullWidth
+              style={styles.loginButton}
+            />
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <Button
+              title="Create Account"
+              onPress={handleRegister}
+              variant="outline"
+              icon="person-add"
+              fullWidth
+            />
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              By continuing, you agree to our Terms of Service and Privacy Policy
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            © 2024 Mofo Technologies. All rights reserved.
-          </Text>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -188,73 +164,83 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollContent: {
-    flexGrow: 1,
+  keyboardView: {
+    flex: 1,
   },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: spacing.lg,
+  content: {
+    flex: 1,
+    paddingHorizontal: spacing.xl,
+    justifyContent: 'space-between',
+  },
+  logoSection: {
     alignItems: 'center',
+    marginTop: spacing.xl * 2,
   },
-  logoContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  logoPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
   },
+  logoText: {
+    fontSize: 48,
+  },
+  appName: {
+    ...typography.h2,
+    color: colors.text,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  tagline: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  formSection: {
+    flex: 1,
+    justifyContent: 'center',
+    marginTop: spacing.xl,
+  },
   title: {
-    ...typography.h1,
-    color: colors.surface,
+    ...typography.h3,
+    color: colors.text,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.body,
-    color: colors.surface,
-    opacity: 0.9,
-  },
-  formContainer: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-  },
-  formTitle: {
-    ...typography.h2,
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  formSubtitle: {
-    ...typography.bodySmall,
     color: colors.textSecondary,
     marginBottom: spacing.xl,
   },
-  inputContainer: {
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginTop: -spacing.sm,
     marginBottom: spacing.md,
   },
-  input: {
-    backgroundColor: colors.surface,
-  },
-  loginButton: {
-    marginTop: spacing.md,
-    borderRadius: borderRadius.md,
-  },
-  loginButtonContent: {
-    paddingVertical: spacing.sm,
-  },
-  registerLink: {
-    marginTop: spacing.lg,
-    alignItems: 'center',
-  },
-  registerText: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  registerTextBold: {
+  forgotPasswordText: {
+    ...typography.bodySmall,
     color: colors.primary,
     fontWeight: '600',
+  },
+  loginButton: {
+    marginBottom: spacing.lg,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginHorizontal: spacing.md,
   },
   footer: {
     paddingVertical: spacing.lg,
@@ -263,7 +249,6 @@ const styles = StyleSheet.create({
   footerText: {
     ...typography.caption,
     color: colors.textSecondary,
+    textAlign: 'center',
   },
 });
-
-export default LoginScreen;

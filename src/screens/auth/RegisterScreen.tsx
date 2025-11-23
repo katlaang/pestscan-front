@@ -1,287 +1,251 @@
 // src/screens/auth/RegisterScreen.tsx
 
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-} from 'react-native';
-import { TextInput, Button, HelperText } from 'react-native-paper';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { AuthStackParamList } from '../../navigation/AuthNavigator';
-import { authService } from '../../services/auth.service';
+import { Input } from '../../components/common/Input';
+import { Button } from '../../components/common/Button';
 import { colors, spacing, typography, borderRadius } from '../../theme/theme';
-import { showSuccessToast, showErrorToast } from '../../utils/toastConfig';
-import { getErrorMessage } from '../../utils/helpers';
-import { Role } from '../../types/api.types';
+import { RegisterRequest, Role } from '../../types/api.types';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
+interface RegisterScreenProps {
+  navigation: any;
+}
 
-const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-  firstName: z.string().min(2, 'First name is required'),
-  lastName: z.string().min(2, 'Last name is required'),
-  phoneNumber: z.string().min(10, 'Valid phone number is required'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
-
-type RegisterFormData = z.infer<typeof registerSchema>;
-
-const RegisterScreen: React.FC<Props> = ({ navigation }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
-    },
+export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
-    
-    try {
-      await authService.register({
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
-        role: Role.SCOUT, // Default role for self-registration
-      });
-      
-      showSuccessToast('Registration Successful', 'Please login with your credentials');
-      navigation.navigate('Login');
-    } catch (error) {
-      showErrorToast('Registration Failed', getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const updateField = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'Phone number is required';
+    } else if (!/^\+?[\d\s-()]+$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'Invalid phone number format';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      newErrors.password = 'Password must contain uppercase, lowercase, and number';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (!agreedToTerms) {
+      newErrors.terms = 'You must agree to the terms and conditions';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleRegister = async () => {
+    if (!validate()) return;
+
+    try {
+      setLoading(true);
+      // TODO: Implement API call
+      // const registerData: RegisterRequest = {
+      //   email: formData.email.toLowerCase(),
+      //   password: formData.password,
+      //   firstName: formData.firstName.trim(),
+      //   lastName: formData.lastName.trim(),
+      //   phoneNumber: formData.phoneNumber.trim(),
+      //   role: Role.SCOUT, // Default role
+      // };
+      // await authService.register(registerData);
+      // navigation.navigate('Login');
+
+      // Mock registration
+      setTimeout(() => {
+        setLoading(false);
+        console.log('Registration successful');
+        navigation.navigate('Login');
+      }, 1500);
+    } catch (error) {
+      setLoading(false);
+      console.error('Registration failed:', error);
+    }
+  };
+
+  const handleLogin = () => {
+    navigation.navigate('Login');
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            style={styles.backButton}
             onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={24} color={colors.primary} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started</Text>
+          <Text style={styles.subtitle}>Join PestScan today</Text>
         </View>
 
-        <View style={styles.formContainer}>
-          <Controller
-            control={control}
-            name="firstName"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  mode="outlined"
-                  label="First Name"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  autoCapitalize="words"
-                  left={<TextInput.Icon icon="account" />}
-                  error={!!errors.firstName}
-                  style={styles.input}
-                />
-                {errors.firstName && (
-                  <HelperText type="error">{errors.firstName.message}</HelperText>
-                )}
-              </View>
-            )}
+        {/* Form */}
+        <View style={styles.formSection}>
+          <View style={styles.nameRow}>
+            <Input
+              label="First Name"
+              value={formData.firstName}
+              onChangeText={(value) => updateField('firstName', value)}
+              placeholder="John"
+              error={errors.firstName}
+              containerStyle={styles.nameInput}
+              required
+            />
+            <Input
+              label="Last Name"
+              value={formData.lastName}
+              onChangeText={(value) => updateField('lastName', value)}
+              placeholder="Doe"
+              error={errors.lastName}
+              containerStyle={styles.nameInput}
+              required
+            />
+          </View>
+
+          <Input
+            label="Email"
+            value={formData.email}
+            onChangeText={(value) => updateField('email', value)}
+            placeholder="your.email@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            error={errors.email}
+            leftIcon="mail"
+            required
           />
 
-          <Controller
-            control={control}
-            name="lastName"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  mode="outlined"
-                  label="Last Name"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  autoCapitalize="words"
-                  left={<TextInput.Icon icon="account" />}
-                  error={!!errors.lastName}
-                  style={styles.input}
-                />
-                {errors.lastName && (
-                  <HelperText type="error">{errors.lastName.message}</HelperText>
-                )}
-              </View>
-            )}
+          <Input
+            label="Phone Number"
+            value={formData.phoneNumber}
+            onChangeText={(value) => updateField('phoneNumber', value)}
+            placeholder="+1 234 567 8900"
+            keyboardType="phone-pad"
+            error={errors.phoneNumber}
+            leftIcon="call"
+            required
           />
 
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  mode="outlined"
-                  label="Email"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  autoComplete="email"
-                  left={<TextInput.Icon icon="email" />}
-                  error={!!errors.email}
-                  style={styles.input}
-                />
-                {errors.email && (
-                  <HelperText type="error">{errors.email.message}</HelperText>
-                )}
-              </View>
-            )}
+          <Input
+            label="Password"
+            value={formData.password}
+            onChangeText={(value) => updateField('password', value)}
+            placeholder="Minimum 8 characters"
+            secureTextEntry
+            error={errors.password}
+            leftIcon="lock-closed"
+            helperText="Must contain uppercase, lowercase, and number"
+            required
           />
 
-          <Controller
-            control={control}
-            name="phoneNumber"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  mode="outlined"
-                  label="Phone Number"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                  left={<TextInput.Icon icon="phone" />}
-                  error={!!errors.phoneNumber}
-                  style={styles.input}
-                />
-                {errors.phoneNumber && (
-                  <HelperText type="error">{errors.phoneNumber.message}</HelperText>
-                )}
-              </View>
-            )}
+          <Input
+            label="Confirm Password"
+            value={formData.confirmPassword}
+            onChangeText={(value) => updateField('confirmPassword', value)}
+            placeholder="Re-enter your password"
+            secureTextEntry
+            error={errors.confirmPassword}
+            leftIcon="lock-closed"
+            required
           />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  mode="outlined"
-                  label="Password"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  left={<TextInput.Icon icon="lock" />}
-                  right={
-                    <TextInput.Icon
-                      icon={showPassword ? 'eye-off' : 'eye'}
-                      onPress={() => setShowPassword(!showPassword)}
-                    />
-                  }
-                  error={!!errors.password}
-                  style={styles.input}
-                />
-                {errors.password && (
-                  <HelperText type="error">{errors.password.message}</HelperText>
-                )}
-              </View>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="confirmPassword"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View style={styles.inputContainer}>
-                <TextInput
-                  mode="outlined"
-                  label="Confirm Password"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  secureTextEntry={!showConfirmPassword}
-                  autoCapitalize="none"
-                  left={<TextInput.Icon icon="lock-check" />}
-                  right={
-                    <TextInput.Icon
-                      icon={showConfirmPassword ? 'eye-off' : 'eye'}
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    />
-                  }
-                  error={!!errors.confirmPassword}
-                  style={styles.input}
-                />
-                {errors.confirmPassword && (
-                  <HelperText type="error">{errors.confirmPassword.message}</HelperText>
-                )}
-              </View>
-            )}
-          />
-
-          <Button
-            mode="contained"
-            onPress={handleSubmit(onSubmit)}
-            loading={isLoading}
-            disabled={isLoading}
-            style={styles.registerButton}
-            contentStyle={styles.registerButtonContent}
-          >
-            Create Account
-          </Button>
-
+          {/* Terms and Conditions */}
           <TouchableOpacity
-            style={styles.loginLink}
-            onPress={() => navigation.navigate('Login')}
-            disabled={isLoading}
+            style={styles.checkboxContainer}
+            onPress={() => {
+              setAgreedToTerms(!agreedToTerms);
+              if (errors.terms) setErrors({ ...errors, terms: '' });
+            }}
+            activeOpacity={0.7}
           >
-            <Text style={styles.loginText}>
-              Already have an account?{' '}
-              <Text style={styles.loginTextBold}>Sign In</Text>
+            <Ionicons
+              name={agreedToTerms ? 'checkbox' : 'square-outline'}
+              size={24}
+              color={agreedToTerms ? colors.primary : colors.textSecondary}
+            />
+            <Text style={styles.checkboxText}>
+              I agree to the{' '}
+              <Text style={styles.link}>Terms of Service</Text> and{' '}
+              <Text style={styles.link}>Privacy Policy</Text>
             </Text>
           </TouchableOpacity>
+          {errors.terms && (
+            <Text style={styles.errorText}>{errors.terms}</Text>
+          )}
+
+          <Button
+            title="Create Account"
+            onPress={handleRegister}
+            loading={loading}
+            disabled={loading}
+            icon="person-add"
+            fullWidth
+            style={styles.registerButton}
+          />
+
+          {/* Login Link */}
+          <View style={styles.loginLink}>
+            <Text style={styles.loginLinkText}>Already have an account? </Text>
+            <TouchableOpacity onPress={handleLogin} activeOpacity={0.7}>
+              <Text style={styles.loginLinkButton}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -290,54 +254,80 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
-    flexGrow: 1,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
   },
   header: {
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     marginBottom: spacing.xl,
   },
   backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
     marginBottom: spacing.md,
   },
   title: {
-    ...typography.h1,
+    ...typography.h2,
     color: colors.text,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.body,
     color: colors.textSecondary,
   },
-  formContainer: {
+  formSection: {
+    marginTop: spacing.md,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  nameInput: {
     flex: 1,
   },
-  inputContainer: {
-    marginBottom: spacing.md,
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
-  input: {
-    backgroundColor: colors.surface,
+  checkboxText: {
+    ...typography.bodySmall,
+    color: colors.text,
+    flex: 1,
+    lineHeight: 20,
+  },
+  link: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  errorText: {
+    ...typography.caption,
+    color: colors.error,
+    marginBottom: spacing.sm,
   },
   registerButton: {
-    marginTop: spacing.md,
-    borderRadius: borderRadius.md,
-  },
-  registerButtonContent: {
-    paddingVertical: spacing.sm,
+    marginTop: spacing.lg,
   },
   loginLink: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: spacing.lg,
-    alignItems: 'center',
   },
-  loginText: {
+  loginLinkText: {
     ...typography.body,
     color: colors.textSecondary,
   },
-  loginTextBold: {
+  loginLinkButton: {
+    ...typography.body,
     color: colors.primary,
     fontWeight: '600',
   },
 });
-
-export default RegisterScreen;

@@ -4,10 +4,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider as PaperProvider } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
-import AppNavigator from './src/navigation/AppNavigator';
-import { AuthProvider } from './src/store/AuthContext';
-import { theme } from './src/theme/theme';
-import { toastConfig } from './src/utils/toastConfig';
+import AppNavigator from 'src/navigation/AppNavigator';
+import { AuthProvider } from 'src/store/AuthContext';
+import { theme } from 'src/theme/theme';
+import { toastConfig } from 'src/utils/toastConfig';
 
 export default function App() {
   return (
@@ -17,7 +17,7 @@ export default function App() {
           <AuthProvider>
             <StatusBar style="auto" />
             <AppNavigator />
-            <Toast config={toastConfig} />
+            {/* <Toast config={toastConfig} /> */}
           </AuthProvider>
         </PaperProvider>
       </SafeAreaProvider>

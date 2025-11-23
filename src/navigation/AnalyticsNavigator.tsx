@@ -1,10 +1,8 @@
-// src/navigation/AnalyticsNavigator.tsx
-
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AnalyticsDashboardScreen from '../screens/analytics/AnalyticsDashboardScreen';
 import HeatmapScreen from '../screens/analytics/HeatmapScreen';
-import ReportsScreen from '../screens/analytics/ReportsScreen';
+import ReportsScreen from '../screens/analytics/ReportScreen';
 
 export type AnalyticsStackParamList = {
   AnalyticsDashboard: { farmId?: string };
